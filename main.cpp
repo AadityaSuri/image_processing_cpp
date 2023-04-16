@@ -7,16 +7,27 @@
 #include <opencv2/core/eigen.hpp>
 
 
-//
-//Eigen::MatrixXf cvMatTo(const cv::Mat &input) {
-//    Eigen::MatrixXf output(input.rows, input.cols);
-//    for (int i = 0; i < input.rows; ++i) {
-//        for (int j = 0; j < input.cols; ++j) {
-//			output(i, j) = input.at<float>(i, j);
-//		}
-//	}
-//	return output;
-//}
+
+cv::Mat TO_GRAY(const cv::Mat& input) {
+	Eigen::Tensor<unsigned char, 3> inputTensor(input.cols, input.rows, 3);
+	cv::cv2eigen(input, inputTensor);
+
+	Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> output(input.cols, input.rows);
+	for (int i = 0; i < input.cols; ++i) {
+		for (int j = 0; j < input.rows; ++j) {
+			unsigned char r = inputTensor(i, j, 2);
+			unsigned char g = inputTensor(i, j, 1);
+			unsigned char b = inputTensor(i, j, 0);
+
+			output(i, j) = 0.11 * r + 0.59 * g + 0.3 * b;
+		}
+	}
+
+	cv::Mat img;
+	cv::eigen2cv(output, img);
+	return img;
+
+}
 
 int main() {
 	cv::VideoCapture cam(0);
@@ -26,37 +37,16 @@ int main() {
 	}
 
 	cv::namedWindow("Window");
-	//cv::Mat output(350, 350, CV_8UC1);
-	//cv::Mat rgb_output(350, 350, CV_8UC3);
-
-	//cv::Mat frame;
-	//cam >> frame;
-	//cv::resize(frame, frame, cv::Size(350, 350));
-	//cv::imshow("bgr_frame", frame);
-	//Eigen::Tensor<float, 3> eigenmat(350, 350, 3);
-	//cv::cv2eigen(frame, eigenmat);
-
-	//std::cout << eigenmat << std::endl;
 
 	while (true) {
 		cv::Mat frame;
 		cam >> frame;
-		cv::resize(frame, frame, cv::Size(10, 10));
+		cv::resize(frame, frame, cv::Size(250, 250));
 		cv::imshow("bgr_frame", frame);
-
-		Eigen::Tensor<float, 3> eigenmat(10, 10, 3);
-		cv::cv2eigen(frame, eigenmat);
-
-		for (int i = 0; i < 10; i++) {
-			for (int j = 0; j < 10; j++) {
-				std::cout << eigenmat(i, j, 0) << ' ';
-			}
-			std::cout << std::endl;
-		}
+		std::cout<<frame.channels()<<std::endl;
+		cv::imshow("eigen_img", TO_GRAY(frame));
 
 		if (cv::waitKey(30) >= 0) break;
-		
-		std::cout << '\n';
 	}
 
 }
