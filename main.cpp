@@ -29,6 +29,68 @@ cv::Mat TO_GRAY(const cv::Mat& input) {
 
 }
 
+cv::Mat RED(const cv::Mat& input) {
+
+	Eigen::Tensor<unsigned char, 3> inputTensor(input.cols, input.rows, 3);
+	cv::cv2eigen(input, inputTensor);
+
+	Eigen::Tensor<unsigned char, 3> output(input.cols, input.rows, 3);
+	for (int i = 0; i < input.cols; ++i) {
+		for (int j = 0; j < input.rows; ++j) {
+			unsigned char r = inputTensor(i, j, 2);
+			unsigned char g = inputTensor(i, j, 1);
+			unsigned char b = inputTensor(i, j, 0);
+			output(i, j, 2) =  r;
+			output(i, j, 1) = 0;
+			output(i, j, 0) = 0;
+
+		}
+	}
+	cv::Mat img;
+	cv::eigen2cv(output, img);
+	return img;
+}
+
+cv::Mat BLUE(cv::Mat& input) {
+	Eigen::Tensor<unsigned char, 3> inputTensor(input.cols, input.rows, 3);
+	cv::cv2eigen(input, inputTensor);
+
+	Eigen::Tensor<unsigned char, 3> output(input.cols, input.rows, 3);
+	for (int i = 0; i < input.cols; ++i) {
+		for (int j = 0; j < input.rows; ++j) {
+			unsigned char r = inputTensor(i, j, 2);
+			unsigned char g = inputTensor(i, j, 1);
+			unsigned char b = inputTensor(i, j, 0);
+			output(i, j, 2) = 0;
+			output(i, j, 1) = 0;
+			output(i, j, 0) = b;
+		}
+	}
+	cv::Mat img;
+	cv::eigen2cv(output, img);
+	return img;
+}
+
+cv::Mat GREEN(cv::Mat& input) {
+	Eigen::Tensor<unsigned char, 3> inputTensor(input.cols, input.rows, 3);
+	cv::cv2eigen(input, inputTensor);
+
+	Eigen::Tensor<unsigned char, 3> output(input.cols, input.rows, 3);
+	for (int i = 0; i < input.cols; ++i) {
+		for (int j = 0; j < input.rows; ++j) {
+			unsigned char r = inputTensor(i, j, 2);
+			unsigned char g = inputTensor(i, j, 1);
+			unsigned char b = inputTensor(i, j, 0);
+			output(i, j, 2) = 0;
+			output(i, j, 1) = g;
+			output(i, j, 0) = 0;
+		}
+	}
+	cv::Mat img;
+	cv::eigen2cv(output, img);
+	return img;
+}
+
 int main() {
 	cv::VideoCapture cam(0);
 
@@ -43,8 +105,11 @@ int main() {
 		cam >> frame;
 		cv::resize(frame, frame, cv::Size(250, 250));
 		cv::imshow("bgr_frame", frame);
-		std::cout<<frame.channels()<<std::endl;
+
 		cv::imshow("eigen_img", TO_GRAY(frame));
+		cv::imshow("eigen_red", RED(frame));
+		cv::imshow("eigen_blue", BLUE(frame));
+		cv::imshow("eigen_green", GREEN(frame));
 
 		if (cv::waitKey(30) >= 0) break;
 	}
