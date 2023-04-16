@@ -5,6 +5,7 @@
 void ImageOperator::to_gray_m1(const cv::Mat& input, cv::Mat& output) {
 
     unsigned char* data_out = (unsigned char*)(output.data);
+
     int ind = 0;
     auto end = input.end<cv::Vec3b>();
     cv::MatConstIterator_<cv::Vec3b> it = input.begin<cv::Vec3b>();
@@ -12,7 +13,7 @@ void ImageOperator::to_gray_m1(const cv::Mat& input, cv::Mat& output) {
         const unsigned char& r = (*it)[2];
         const unsigned char& g = (*it)[1];
         const unsigned char& b = (*it)[0];
-        data_out[ind] = 0.3 * r + 0.59 * g + 0.11 * b;
+        data_out[ind] = (std::min({ r, g, b}) + std::max({ r, g, b}) ) / 2;
         ind++;
     }
 

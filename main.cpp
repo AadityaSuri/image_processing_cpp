@@ -21,8 +21,8 @@ int main() {
 
         cv::imshow("bgr_frame", frame);
 
-        cv::cvtColor(frame, output, cv::COLOR_BGR2GRAY);
-        cv::imshow("opencv_func", output);
+        //cv::cvtColor(frame, output, cv::COLOR_BGR2GRAY);
+        //cv::imshow("opencv_func", output);
 
         ImageOperator::to_gray_m1(frame, output);
         cv::imshow("to_gray_m1", output);
@@ -30,8 +30,8 @@ int main() {
         ImageOperator::to_gray_m2(frame, output);
         cv::imshow("to_gray_m2", output);
 
-        ImageOperator::to_gray_m3(frame, output);
-        cv::imshow("to_gray_m3", output);
+        //ImageOperator::to_gray_m3(frame, output);
+        //cv::imshow("to_gray_m3", output);
 
         ///No OpenCV
         //const unsigned char* bgr_input = (unsigned char*)frame.data;
