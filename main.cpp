@@ -1,7 +1,7 @@
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
-#include "ImageOperator.h"
+//#include "ImageOperator.h"
 #include <chrono>
 #include <Eigen/Dense>
 #include <opencv2/core/eigen.hpp>
@@ -31,12 +31,12 @@ cv::Mat TO_GRAY(const cv::Mat& input) {
 
 cv::Mat RED(const cv::Mat& input) {
 
-	Eigen::Tensor<unsigned char, 3> inputTensor(input.cols, input.rows, 3);
+	Eigen::Tensor<unsigned char, 3> inputTensor(input.rows, input.cols, 3);
 	cv::cv2eigen(input, inputTensor);
 
-	Eigen::Tensor<unsigned char, 3> output(input.cols, input.rows, 3);
-	for (int i = 0; i < input.cols; ++i) {
-		for (int j = 0; j < input.rows; ++j) {
+	Eigen::Tensor<unsigned char, 3> output(input.rows, input.cols, 3);
+	for (int i = 0; i < input.rows; ++i) {
+		for (int j = 0; j < input.cols; ++j) {
 			unsigned char r = inputTensor(i, j, 2);
 			unsigned char g = inputTensor(i, j, 1);
 			unsigned char b = inputTensor(i, j, 0);
@@ -91,6 +91,40 @@ cv::Mat GREEN(cv::Mat& input) {
 	return img;
 }
 
+std::vector<cv::Mat> YUV(const cv::Mat& input) {
+
+	Eigen::Tensor<unsigned char, 3> inputTensor(input.rows, input.cols, 3);
+	cv::cv2eigen(input, inputTensor);
+
+	Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> Y(input.rows, input.cols);
+	Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> U(input.rows, input.cols);
+	Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> V(input.rows, input.cols);
+
+	for (int i = 0; i < input.rows; i++) {
+		for (int j = 0; j < input.cols; j++) {
+			unsigned char r = inputTensor(i, j, 2);
+			unsigned char g = inputTensor(i, j, 1);
+			unsigned char b = inputTensor(i, j, 0);
+
+			Y(i, j) = (r >> 2) + (g >> 1) + (b >> 2);
+			U(i, j) = (r >> 2) - (b >> 2);
+			V(i, j) = (b >> 2) - (r >> 2);
+
+		}
+	}
+
+	cv::Mat y;
+	cv::Mat u;
+	cv::Mat v;
+
+	cv::eigen2cv(Y, y);
+	cv::eigen2cv(U, u);
+	cv::eigen2cv(V, v);
+
+	return { y,u,v };
+}
+
+
 int main() {
 	cv::VideoCapture cam(0);
 
@@ -103,13 +137,17 @@ int main() {
 	while (true) {
 		cv::Mat frame;
 		cam >> frame;
-		cv::resize(frame, frame, cv::Size(250, 250));
+		cv::resize(frame, frame, cv::Size(800, 600));
 		cv::imshow("bgr_frame", frame);
 
-		cv::imshow("eigen_img", TO_GRAY(frame));
-		cv::imshow("eigen_red", RED(frame));
-		cv::imshow("eigen_blue", BLUE(frame));
-		cv::imshow("eigen_green", GREEN(frame));
+		//cv::imshow("eigen_img", TO_GRAY(frame));
+		//cv::imshow("eigen_red", RED(frame));
+		//cv::imshow("eigen_blue", BLUE(frame));
+		//cv::imshow("eigen_green", GREEN(frame));
+		//cv::imshow("Y", YUV(frame)[0]);
+		cv::imshow("U", YUV(frame)[1]);
+		cv::imshow("V", YUV(frame)[2]);
+
 
 		if (cv::waitKey(30) >= 0) break;
 	}
