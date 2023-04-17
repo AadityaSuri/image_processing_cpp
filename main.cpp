@@ -1,7 +1,7 @@
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
-//#include "ImageOperator.h"
+#include "ImageOperator.h"
 #include <chrono>
 #include <Eigen/Dense>
 #include <opencv2/core/eigen.hpp>
@@ -41,7 +41,7 @@ cv::Mat RED(const cv::Mat& input) {
 			unsigned char g = inputTensor(i, j, 1);
 			unsigned char b = inputTensor(i, j, 0);
 			output(i, j, 2) =  r;
-			output(i, j, 1) = 0;
+			output(i, j, 1) = 0.5 * g;
 			output(i, j, 0) = 0;
 
 		}
@@ -91,38 +91,36 @@ cv::Mat GREEN(cv::Mat& input) {
 	return img;
 }
 
-std::vector<cv::Mat> YUV(const cv::Mat& input) {
-
-	Eigen::Tensor<unsigned char, 3> inputTensor(input.rows, input.cols, 3);
-	cv::cv2eigen(input, inputTensor);
-
-	Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> Y(input.rows, input.cols);
-	Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> U(input.rows, input.cols);
-	Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> V(input.rows, input.cols);
-
-	for (int i = 0; i < input.rows; i++) {
-		for (int j = 0; j < input.cols; j++) {
-			unsigned char r = inputTensor(i, j, 2);
-			unsigned char g = inputTensor(i, j, 1);
-			unsigned char b = inputTensor(i, j, 0);
-
-			Y(i, j) = (r >> 2) + (g >> 1) + (b >> 2);
-			U(i, j) = (r >> 2) - (b >> 2);
-			V(i, j) = (b >> 2) - (r >> 2);
-
-		}
-	}
-
-	cv::Mat y;
-	cv::Mat u;
-	cv::Mat v;
-
-	cv::eigen2cv(Y, y);
-	cv::eigen2cv(U, u);
-	cv::eigen2cv(V, v);
-
-	return { y,u,v };
-}
+//cv::Mat YUV(const cv::Mat& input) {
+//
+//	Eigen::Tensor<unsigned char, 3> inputTensor(input.rows, input.cols, 3);
+//	cv::cv2eigen(input, inputTensor);
+//
+//	//Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> Y(input.rows, input.cols);
+//	//Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> U(input.rows, input.cols);
+//	//Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> V(input.rows, input.cols);
+//
+//	Eigen::Tensor<unsigned char, 3> YUVTensor(input.rows, input.cols, 3);
+//
+//	for (int i = 0; i < input.rows; i++) {
+//		for (int j = 0; j < input.cols; j++) {
+//			unsigned char r = inputTensor(i, j, 2);
+//			unsigned char g = inputTensor(i, j, 1);
+//			unsigned char b = inputTensor(i, j, 0);
+//
+//			YUVTensor(i, j, 0) = (r >> 2) + (g >> 1) + (b >> 2);
+//			YUVTensor(i, j, 1) = (r >> 2) - (b >> 2);
+//			YUVTensor(i, j, 2) = (b >> 2) - (r >> 2);
+//
+//		}
+//	}
+//
+//	cv::Mat yuv;
+//	cv::eigen2cv(YUVTensor, yuv);
+//
+//	return yuv;
+//
+//}
 
 
 int main() {
@@ -137,16 +135,56 @@ int main() {
 	while (true) {
 		cv::Mat frame;
 		cam >> frame;
-		cv::resize(frame, frame, cv::Size(800, 600));
+		cv::resize(frame, frame, cv::Size(400, 300));
 		cv::imshow("bgr_frame", frame);
+
+		cv::Mat hsv_output;
+		cv::cvtColor(frame, hsv_output, cv::COLOR_BGR2HSV);
+		cv::imshow("hsv_image", hsv_output);
+
+		cv::Mat yuv_output;
+		cv::cvtColor(frame, yuv_output, cv::COLOR_BGR2YUV);
+		cv::imshow("yuv_output", yuv_output);
+
+		cv::Mat YCrCb_output;
+		cv::cvtColor(frame, YCrCb_output, cv::COLOR_BGR2YCrCb);
+		cv::imshow("YCrCb_output", YCrCb_output);
+
+
+		//cv::imshow("yuv_format", YUV(frame));
+
 
 		//cv::imshow("eigen_img", TO_GRAY(frame));
 		//cv::imshow("eigen_red", RED(frame));
 		//cv::imshow("eigen_blue", BLUE(frame));
 		//cv::imshow("eigen_green", GREEN(frame));
 		//cv::imshow("Y", YUV(frame)[0]);
-		cv::imshow("U", YUV(frame)[1]);
-		cv::imshow("V", YUV(frame)[2]);
+		//cv::imshow("U", YUV(frame)[1]);
+		//cv::imshow("V", YUV(frame)[2]);
+
+		//const unsigned char* bgr_input = (unsigned char*)frame.data;
+		//unsigned char* gray_output = new unsigned char[frame.rows * frame.cols];
+		//
+		//ImageOperator::to_gray(bgr_input, frame.cols, frame.rows, frame.channels(), gray_output);
+		//cv::Mat output_gray(frame.rows, frame.cols, CV_8UC1, gray_output);
+  //      cv::imshow("to_gray_no_opencv", output_gray);
+
+		//std::unique_ptr<unsigned char[]> bgr_input = std::make_unique<unsigned char[]>(frame.total() * frame.elemSize());
+		//std::copy(frame.data, frame.data + frame.total() * frame.elemSize(), bgr_input.get());
+
+		//std::unique_ptr<unsigned char[]> gray_output;
+		//ImageOperator::to_gray(bgr_input, frame.cols, frame.rows, frame.channels(), gray_output);
+
+		//cv::Mat output_gray(frame.rows, frame.cols, CV_8UC1, gray_output.get());
+		//cv::imshow("to_gray_no_opencv", output_gray);
+
+
+		//std::unique_ptr<unsigned char[]> yuv_output;
+		//ImageOperator::to_yuv(bgr_input, frame.cols, frame.rows, frame.channels(), yuv_output);
+
+		//cv::Mat output_yuv(frame.rows, frame.cols, CV_8UC1, yuv_output.get());
+		//cv::imshow("to_yuv_no_opencv", output_yuv);
+
 
 
 		if (cv::waitKey(30) >= 0) break;
